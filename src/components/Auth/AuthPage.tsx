@@ -13,6 +13,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
     
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    
+    // סטייט לפופ-אפ המעוצב של ההרשמה המוצלחת
+    const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -22,12 +25,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
         try {
             if (isLogin) {
                 const data = await authService.login(username, password);
-                // שליחת הטוקן לרכיב האב (App.tsx) - תתאים ל-data.token במידת הצורך
                 onAuthSuccess(data.token || data); 
             } else {
                 await authService.register(username, email, password);
-                alert("Account created successfully! Please sign in.");
-                setIsLogin(true); // מעבר אוטומטי למסך התחברות
+                
+                // במקום ה-alert הישן: פותחים את הפופ-אפ המעוצב
+                setShowSuccessModal(true);
             }
         } catch (error: any) {
             console.error("Auth error:", error);
@@ -37,8 +40,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
         }
     };
 
+    // פונקציה לסגירת הפופ-אפ ומעבר חלק למסך ה-Login
+    const handleModalClose = () => {
+        setShowSuccessModal(false);
+        setIsLogin(true); // מעביר אוטומטית למסך ההתחברות
+        setEmail('');     // מנקה את השדות הישנים
+    };
+
     return (
-        <div className="min-h-screen bg-[#F8F9FB] flex flex-col justify-center items-center px-6 font-sans">
+        <div className="min-h-screen bg-[#F8F9FB] flex flex-col justify-center items-center px-6 font-sans relative">
             <div className="text-4xl font-black italic text-[#00a3e0] tracking-tighter mb-8">
                 shva<span className="text-gray-200">.</span>simulator
             </div>
@@ -125,6 +135,36 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                     </button>
                 </div>
             </div>
+
+            {/* === פופ-אפ מעוצב עבור הרשמה מוצלחת === */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-2xl max-w-sm w-full text-center space-y-5 transform scale-100 transition-all">
+                        
+                        <div className="flex justify-center">
+                            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center text-3xl text-emerald-500">
+                                🎉
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <h3 className="text-xl font-black text-[#2D1F5B]">
+                                Account Created!
+                            </h3>
+                            <p className="text-sm text-gray-400">
+                                Your simulator profile is ready. You can now log in using your credentials.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={handleModalClose}
+                            className="w-full py-3 font-bold rounded-xl text-white bg-[#7B61FF] hover:bg-[#684ee3] transition-colors shadow-sm"
+                        >
+                            Proceed to Sign In
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
